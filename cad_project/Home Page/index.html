@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!-- Created By CodingLab - www.codinglabweb.com -->
+<html lang="en" dir="ltr">
+  <head>
+    <title>Machine Health Monitoring System</title>
+    <meta charset="UTF-8" />
+    <!---- <title> Login Form | CodingLab </title>--->
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="main_div">
+      <div class="title">Machine health monitoring</div>
+      
+      <form action="https://www.advancedtech.com/industrial-technology/sensor-technology/" method="post" name="Login_form" onsubmit="return validated()">
+        <div class="input_box">
+          <input class="input" autocomplete="off" type="text" placeholder="Username" name="Username" required />
+          <div class="icon"><i class="fas fa-user"></i></div>
+        </div>
+        <div id = "Username_error">Incorrect Username</div>
+        <div class="input_box">
+          <input type="password" placeholder="Password" name="Password" required />
+          <div class="icon"><i class="fas fa-lock"></i></div>
+        </div>
+        <div id = "Pass_error">Incorrect password</div>
+        <div class="option_div">
+          <div class="check_box"></div>
+          <div class="forget_div"></div>
+        </div>
+        <div class="input_box button">
+          <input type="submit" value="Login" />
+        </div>
+      </form>
+    </div>
+    <script src="index.js"></script>
+  </body>
+</html>

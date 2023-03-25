@@ -1,6 +1,6 @@
 //mq2 gas sensor
 int LED = 32;            /*LED pin defined*/
-int Sensor_input = 4;    /*Digital pin 5 for sensor input*/
+int Sensor_input = 33;    /*Digital pin 5 for sensor input*/
 //
 
 //For Ultrasonic sensor
@@ -30,8 +30,10 @@ OneWire oneWire(oneWireBus);
 DallasTemperature sensors(&oneWire);
 //
 
-//For mq2 sensor
-int vib = 3;
+//For Vibration sensor
+int vib = 13;
+int count = 0;
+int prev_count = 0;
 //
 
 void setup()
@@ -49,14 +51,17 @@ void setup()
     //Temp
     // Start the DS18B20 sensor
     sensors.begin();
-    
-    xTaskCreate(mq2, "Interfacing MQ2", 10000, NULL, 4, NULL);
+
+    //Vibration
+    pinMode(vib, INPUT);
+
+    xTaskCreate(mq2, "Interfacing MQ2", 10000, NULL, 3, NULL);
     delay(2500);
-    xTaskCreate(ultraSonic, "Interfacing HC SR04", 10000, NULL, 3, NULL);
+    xTaskCreate(ultraSonic, "Interfacing HC SR04", 10000, NULL, 2, NULL);
     delay(2500);
-    xTaskCreate(temp, "Interfacing Temperature Sensor", 10000, NULL, 2, NULL);
+    xTaskCreate(temp, "Interfacing Temperature Sensor", 10000, NULL, 1, NULL);
     delay(2500);
-    xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, 1, NULL);
+    xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, tskIDLE_PRIORITY, NULL);
 }
 
 void loop()
@@ -68,16 +73,16 @@ void mq2(void *pvParameters)
     //Serial.println("Inside MQ2");
     int sensor_Aout = analogRead(Sensor_input);  /*Analog value read function*/
     if(sensor_Aout<500) break;
-    Serial.print("Gas Sensor: ");    
-    Serial.print(sensor_Aout);   /*Read value printed*/
-    Serial.print("\t");
-    Serial.print("\t");
+    Serial.print("Gas Sensor: ");   
+    Serial.println(sensor_Aout);   /*Read value printed*/
+//    Serial.print("\t");
+//    Serial.print("\t");
     if (sensor_Aout > 1800) {    /*if condition with threshold 1800*/
-      Serial.println("Gas");  
+//      Serial.println("Gas");  
       digitalWrite (LED, HIGH) ; /*LED set HIGH if Gas detected */
     }
     else {
-      Serial.println("No Gas");
+//      Serial.println("No Gas");
       digitalWrite (LED, LOW) ;  /*LED set LOW if NO Gas detected */
     }
     delay(10000);
@@ -139,15 +144,16 @@ void vibration(void *pvParameters)
 {
     while(1){
     //Serial.println("Inside Vibration");
-    int value = pulseIn (vib, HIGH);
-    Serial.println(value);
-    if (value > 1000){
-    Serial.println("The Titans are coming!");
+    bool value = digitalRead(vib);
+    if (value == 1) {
+      count = count + 1;
+      delay(1000);
+    }else if(value == 0){
+      if(count != prev_count){
+        prev_count = count;
+        Serial.println(prev_count);
+      }
     }
-    else{
-    Serial.println("Tranquility is here"); 
-    }
-    delay(10000);
     }
     vTaskDelete( NULL );
 }

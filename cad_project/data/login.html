@@ -1,4 +1,8 @@
-*{
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <style>
+      *{
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -89,20 +93,6 @@
     transform: translateY(-50%);
     color: grey;
   }
-  .input:invalid{
-    animation: shake 0.2s 2;
-  }
-  @keyframes shake {
-    25% {
-        translate: 6px 0;
-    }
-    50%{
-        translate: -6px 0;
-    }
-    75%{
-        translate: 6px 0;
-    }
-}
   #Username_error,
   #Pass_error{
    
@@ -112,7 +102,6 @@
     color: red;
     text-align: center;
     display: none;
-    animation: shake 0.2s 2;
   }
   form .option_div{
     margin-top: 5px;
@@ -160,3 +149,39 @@
   }
   
   
+    </style>
+    <title>Login</title>
+    <meta charset="UTF-8" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="main_div">
+      <div class="title">Machine health monitoring</div>
+      
+      <form action="https://www.advancedtech.com/industrial-technology/sensor-technology/" method="post" name="Login_form" onsubmit="return validated()">
+        <div class="input_box">
+          <input class="input" autocomplete="off" type="text" placeholder="Username" name="Username" required />
+          <div class="icon"><i class="fas fa-user"></i></div>
+        </div>
+        <div id = "Username_error">Incorrect Username</div>
+        <div class="input_box">
+          <input type="password" placeholder="Password" name="Password" required />
+          <div class="icon"><i class="fas fa-lock"></i></div>
+        </div>
+        <div id = "Pass_error">Incorrect password</div>
+        <div class="option_div">
+          <div class="check_box"></div>
+          <div class="forget_div"></div>
+        </div>
+        <div class="input_box button">
+          <input type="submit" value="Login" />
+        </div>
+      </form>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>

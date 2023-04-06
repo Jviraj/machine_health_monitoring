@@ -1,0 +1,115 @@
+<html>   
+<head>   
+    <meta http-equiv="refresh" content="5">
+    <title>Machine Health Monitoring</title>
+     
+<style>   
+    * {   
+        box-sizing: border-box;   
+    }
+    h3:hover{
+        color:black;
+    }
+    body {  
+    background-color: #be2edd;  
+    background-size: cover;  
+     }
+      
+    .column {   
+        
+        float: left;   
+        width: 25%;   
+        padding: 4px;   
+    }   
+          
+    .row {    
+        margin: 3px;  
+    }   
+         
+    .block {   
+        padding: 10px;   
+        text-align: center;   
+        background-color: blue;   
+        color: white;   
+        }   
+    .block2 {   
+        padding: 10px;   
+        text-align: center;   
+        background-color: cyan;   
+        color: white;   
+        }             
+    .fa {   
+        font-size: 50px;   
+    }
+    #Heading:hover{
+        color : bisque;
+    }
+    </style>   
+      
+</head>
+
+<body style="text-align:center">   
+ 
+    
+    <h1  id="Heading" style="padding-top: 20px; padding-bottom: 60px;"> Machine Health Monitoring System </h1>
+    
+     <div class="row">   
+    <div class="column">   
+        <div class="block">
+        <!-- <h3> Gas Sensor </h3> -->
+            
+        <!-- <h1></h1>    -->
+        <p class="card-title">GAS LEAKED</p>
+        <p><span class="reading"><span id="mq2"></span> gas</span></p>
+        </div>
+        <div class="block2">  
+            <h4 style="color:black"> 800 </h1>   
+            <h4 style="color:black"> Threshold Limit </h3>   
+        </div>
+    </div>  
+          
+    <div class="column">   
+        <div class="block"> 
+        <!-- <h3> Ultrasonic Sensor </h3>    -->
+        <!-- <h1></h1>    -->
+        <p class="card-title">COOLANT LEVEL</p>
+        <p><span class="reading"><span id="distance"></span> cm</span></p>
+        </div>
+        <div class="block2">  
+            <h4 style="color:black"> 250 </h1>   
+            <h4 style="color:black"> Threshold Limit </h3>   
+        </div>
+    </div>   
+          
+    <div class="column">   
+        <div class="block">
+        <!-- <h3> Vibration Sensor </h3> -->
+             
+         
+        <!-- <h1></h1>     -->
+        <p class="card-title">CHATTER</p>
+        <p><span class="reading"><span id="vibration"></span> sec</span></p>
+        </div>
+        <div class="block2">  
+            <h4 style="color:black"> 160 </h1>   
+            <h4 style="color:black"> Threshold Limit</h3>   
+        </div>
+    </div>   
+  
+    <div class="column">   
+        <div class="block">
+        <!-- <h3> Temperature Sensor </h3>   -->
+     
+        <!-- <h1></h1>    -->
+        <p class="card-title">TEMPERATURE</p>
+        <p><span class="reading"><span id="temp"></span> &deg;C</span></p>
+        </div>
+        <div class="block2">  
+            <h4 style="color:black"> 50 </h1>   
+            <h4 style="color:black"> Threshold Limit </h3>   
+        </div>
+    </div>   
+    </div>  
+    <script src="script.js"></script>
+</body>   
+</html> 

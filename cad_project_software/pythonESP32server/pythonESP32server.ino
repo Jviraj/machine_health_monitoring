@@ -1,3 +1,5 @@
+#include <Arduino_JSON.h>
+JSONVar reading;
 //--------------------------------------------------------------------
 //mq2 gas sensor
 int LED = 32;            /*LED pin defined*/
@@ -37,75 +39,30 @@ int count = 0;
 int prev_count = 0;
 //
 //--------------------------------------------------------------------
-// Webserver
 #include <WiFi.h>
-#include <ESPAsyncWebServer.h>
-#include "SPIFFS.h"
-#include <Arduino_JSON.h>
-#include <Arduino.h>
-const char* ssid = "OnePlusNord";
-const char* password = "d2bfgegn";
-JSONVar reading;
-AsyncWebServer server(80);
-AsyncEventSource events("/events");
+#include <HTTPClient.h>
 
-//--------------------------------------------------------------------
-void setup()
-{
-    Serial.begin(115200);
+const char* ssid = "";
+const char* password = "";
+String str = "";
+
+void setup() {
+  Serial.begin(115200);
+
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
 
-    //Initialize SPIFFS
-    if(!SPIFFS.begin(true)){
-      Serial.println("An Error has occurred while mounting SPIFFS");
-      return;
-    }
+  Serial.println("Connected to WiFi");
+  Serial.print("Connected to WiFi network with IP Address: ");
+  Serial.println(WiFi.localIP());
+  // Send a GET request to localhost
+  sendPostRequest("greeting", "a");
 
-    // Connect to Wi-Fi
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED) {
-      delay(1000);
-      Serial.println("Connecting to WiFi..");
-    }
-  
-    // Print ESP32 Local IP Address
-    Serial.println(WiFi.localIP());
-  
-    // Route for root / web page
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(SPIFFS, "/index.html", "text/html");
-    });
-
-//    server.on("/login", HTTP_GET, [](AsyncWebServerRequest *request){
-//        request->send(200, "text/plain", "OK");
-//      server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-//        request->send(SPIFFS, "/index.html", "text/html");
-//      });
-//      Serial.println("----------------------------------");
-//      Serial.println("Ip addr sent");
-//      Serial.println("----------------------------------");
-//      reading["ip"] = String(WiFi.localIP());
-//      String accString = JSON.stringify (reading);
-//      events.send(accString.c_str(),"ip_addr",millis());
-//    });
-    
-      server.serveStatic("/", SPIFFS, "/");
-
-  // Handle Web Server Events
-    events.onConnect([](AsyncEventSourceClient *client){
-      if(client->lastId()){
-        Serial.printf("Client reconnected! Last message ID that it got is: %u\n", client->lastId());
-      }
-      // send event with message "hello!", id current millis
-      // and set reconnect delay to 1 second
-      client->send("hello!", NULL, millis(), 10000);
-    });
-    server.addHandler(&events);
-
-    // Start server
-    server.begin();
-    
-    //MQ2
+  //MQ2
     pinMode(LED, OUTPUT);  /*LED set as Output*/
 
     //Ultrasonic
@@ -119,18 +76,55 @@ void setup()
     //Vibration
     pinMode(vib, INPUT);
 
-    xTaskCreate(mq2, "Interfacing MQ2", 10000, NULL, 3, NULL);
-    delay(500);
-    xTaskCreate(ultraSonic, "Interfacing HC SR04", 10000, NULL, 2, NULL);
-    delay(500);
-    xTaskCreate(temp, "Interfacing Temperature Sensor", 10000, NULL, 1, NULL);
-    delay(500);
-    xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, tskIDLE_PRIORITY, NULL);
+   xTaskCreate(mq2, "Interfacing MQ2", 10000, NULL, 3, NULL);
+   delay(500);
+   xTaskCreate(ultraSonic, "Interfacing HC SR04", 10000, NULL, 2, NULL);
+   delay(500);
+   xTaskCreate(temp, "Interfacing Temperature Sensor", 10000, NULL, 1, NULL);
+   delay(500);
+//   xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, tskIDLE_PRIORITY, NULL);
 }
-//--------------------------------------------------------------------
-void loop()
-{delay(1000);}
-//--------------------------------------------------------------------
+
+void loop() {
+  // String accString = JSON.stringify ("00");
+  // delay(1000);
+  // str = "update-mq2";
+  // sendPostRequest(str, accString);
+  // accString = JSON.stringify ("01");
+  // delay(1000);
+  // str = "update-dist";
+  // sendPostRequest(str, accString);
+  // accString = JSON.stringify ("02");
+  // delay(1000);
+  // str = "update-temp";
+  // sendPostRequest(str, accString);
+  // accString = JSON.stringify ("03");
+  // delay(1000);
+  // str = "update-vib";
+  // sendPostRequest(str, accString);
+}
+
+void sendPostRequest(String s, String d) {
+  WiFiClient client;
+  HTTPClient http;
+  String serverPath = "http://192.168.29.129:8080/";
+  serverPath = serverPath + s;
+
+  http.begin(client, serverPath); // Change to the correct address/port if needed
+  http.addHeader("Content-Type", "application/json");
+  // Send the GET request
+  int httpCode = http.POST(d);
+
+  if (httpCode > 0) {
+    Serial.printf("HTTP Code: %d\n", httpCode);
+  } else {
+    Serial.println("HTTP GET request failed");
+    Serial.printf("HTTP Code: %d\n", httpCode);
+  }
+
+  http.end();
+}
+
 void mq2(void *pvParameters)
 {
     while(1){
@@ -151,8 +145,8 @@ void mq2(void *pvParameters)
       digitalWrite (LED, LOW) ;  /*LED set LOW if NO Gas detected */
       reading["mq2"] = "0";
     }
-    String accString = JSON.stringify (reading);
-    events.send(accString.c_str(),"gas_reading",NULL);
+    str = "update-mq2";
+    sendPostRequest(str, reading["mq2"]);
     delay(2000);
     }
     vTaskDelete( NULL );
@@ -187,8 +181,8 @@ void ultraSonic(void *pvParameters)
     Serial.print("Distance (inch): ");
     Serial.println(distanceInch);
     reading["distance"] = String(distanceCm);
-    String accString = JSON.stringify (reading);
-    events.send(accString.c_str(),"ultrasonic_reading",NULL);
+    str = "update-dist";
+    sendPostRequest(str, reading["distance"]);
     delay(2000);
     }
     vTaskDelete( NULL );
@@ -207,8 +201,8 @@ void temp(void *pvParameters)
     Serial.print(temperatureF);
     Serial.println("ºF");
     reading["temp"] = String(temperatureC);
-    String accString = JSON.stringify (reading);
-    events.send(accString.c_str(),"temperature_reading",NULL);
+    str = "update-temp";
+    sendPostRequest(str, reading["temp"]);
     delay(2000);
     }
     vTaskDelete( NULL );
@@ -223,8 +217,8 @@ void vibration(void *pvParameters)
       count = count + 1;
       delay(1000);
       reading["vibration"] = String(prev_count);
-      String accString = JSON.stringify (reading);
-      events.send(accString.c_str(),"chatter_reading",NULL);
+      str = "update-vib";
+      sendPostRequest(str, reading["vibration"]);
     }else if(value == 0){
       if(count != prev_count){
         prev_count = count;

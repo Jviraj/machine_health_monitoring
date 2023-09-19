@@ -43,23 +43,11 @@ int prev_count = 0;
 #include "SPIFFS.h"
 #include <Arduino_JSON.h>
 #include <Arduino.h>
-const char* ssid = "SSID";
-const char* password = "PASSWORD";
+const char* ssid = "OnePlusNord";
+const char* password = "d2bfgegn";
 JSONVar reading;
 AsyncWebServer server(80);
 AsyncEventSource events("/events");
-//--------------------------------------------------------------------
-// Replaces placeholder with DHT values
-String processor(const String& var){
-  //Serial.println(var);
-  if(var == "TEMPERATURE"){
-//    return readDHTTemperature();
-  }
-  else if(var == "HUMIDITY"){
-//    return readDHTHumidity();
-  }
-  return String();
-}
 
 //--------------------------------------------------------------------
 void setup()
@@ -88,11 +76,20 @@ void setup()
       request->send(SPIFFS, "/index.html", "text/html");
     });
 
-      server.serveStatic("/", SPIFFS, "/");
-
 //    server.on("/login", HTTP_GET, [](AsyncWebServerRequest *request){
-//      request->send(SPIFFS, "/index.html", String(), false, processor);
+//        request->send(200, "text/plain", "OK");
+//      server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+//        request->send(SPIFFS, "/index.html", "text/html");
+//      });
+//      Serial.println("----------------------------------");
+//      Serial.println("Ip addr sent");
+//      Serial.println("----------------------------------");
+//      reading["ip"] = String(WiFi.localIP());
+//      String accString = JSON.stringify (reading);
+//      events.send(accString.c_str(),"ip_addr",millis());
 //    });
+    
+      server.serveStatic("/", SPIFFS, "/");
 
   // Handle Web Server Events
     events.onConnect([](AsyncEventSourceClient *client){
@@ -123,11 +120,11 @@ void setup()
     pinMode(vib, INPUT);
 
     xTaskCreate(mq2, "Interfacing MQ2", 10000, NULL, 3, NULL);
-    delay(2500);
+    delay(500);
     xTaskCreate(ultraSonic, "Interfacing HC SR04", 10000, NULL, 2, NULL);
-    delay(2500);
+    delay(500);
     xTaskCreate(temp, "Interfacing Temperature Sensor", 10000, NULL, 1, NULL);
-    delay(2500);
+    delay(500);
     xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, tskIDLE_PRIORITY, NULL);
 }
 //--------------------------------------------------------------------
@@ -156,7 +153,7 @@ void mq2(void *pvParameters)
     }
     String accString = JSON.stringify (reading);
     events.send(accString.c_str(),"gas_reading",NULL);
-    delay(10000);
+    delay(2000);
     }
     vTaskDelete( NULL );
 }
@@ -192,7 +189,7 @@ void ultraSonic(void *pvParameters)
     reading["distance"] = String(distanceCm);
     String accString = JSON.stringify (reading);
     events.send(accString.c_str(),"ultrasonic_reading",NULL);
-    delay(10000);
+    delay(2000);
     }
     vTaskDelete( NULL );
 }
@@ -212,7 +209,7 @@ void temp(void *pvParameters)
     reading["temp"] = String(temperatureC);
     String accString = JSON.stringify (reading);
     events.send(accString.c_str(),"temperature_reading",NULL);
-    delay(10000);
+    delay(2000);
     }
     vTaskDelete( NULL );
 }

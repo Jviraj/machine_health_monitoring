@@ -43,8 +43,8 @@ int prev_count = 0;
 #include "SPIFFS.h"
 #include <Arduino_JSON.h>
 #include <Arduino.h>
-const char* ssid = "OnePlusNord";
-const char* password = "d2bfgegn";
+const char* ssid = "";
+const char* password = "";
 JSONVar reading;
 AsyncWebServer server(80);
 AsyncEventSource events("/events");

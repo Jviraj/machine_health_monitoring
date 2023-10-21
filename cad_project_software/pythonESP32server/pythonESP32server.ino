@@ -82,26 +82,26 @@ void setup() {
    delay(500);
    xTaskCreate(temp, "Interfacing Temperature Sensor", 10000, NULL, 1, NULL);
    delay(500);
-//   xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, tskIDLE_PRIORITY, NULL);
+   xTaskCreate(vibration, "Interfacing Vibration Sensor", 10000, NULL, tskIDLE_PRIORITY, NULL);
 }
 
 void loop() {
-  // String accString = JSON.stringify ("00");
-  // delay(1000);
-  // str = "update-mq2";
-  // sendPostRequest(str, accString);
-  // accString = JSON.stringify ("01");
-  // delay(1000);
-  // str = "update-dist";
-  // sendPostRequest(str, accString);
-  // accString = JSON.stringify ("02");
-  // delay(1000);
-  // str = "update-temp";
-  // sendPostRequest(str, accString);
-  // accString = JSON.stringify ("03");
-  // delay(1000);
-  // str = "update-vib";
-  // sendPostRequest(str, accString);
+//   String accString = JSON.stringify ("00");
+//   delay(1000);
+//   str = "update-mq2";
+//   sendPostRequest(str, accString);
+//   accString = JSON.stringify ("01");
+//   delay(1000);
+//   str = "update-dist";
+//   sendPostRequest(str, accString);
+//   accString = JSON.stringify ("02");
+//   delay(1000);
+//   str = "update-temp";
+//   sendPostRequest(str, accString);
+//   accString = JSON.stringify ("03");
+//   delay(1000);
+//   str = "update-vib";
+//   sendPostRequest(str, accString);
 }
 
 void sendPostRequest(String s, String d) {
@@ -128,13 +128,12 @@ void sendPostRequest(String s, String d) {
 void mq2(void *pvParameters)
 {
     while(1){
-    //Serial.println("Inside MQ2");
+    // Inside MQ2 sensor
     int sensor_Aout = analogRead(Sensor_input);  /*Analog value read function*/
     if(sensor_Aout<500) break;
     Serial.print("Gas Sensor: ");   
     Serial.println(sensor_Aout);   /*Read value printed*/
-//    Serial.print("\t");
-//    Serial.print("\t");
+    
     if (sensor_Aout > 1800) {    /*if condition with threshold 1800*/
 //      Serial.println("Gas");  
       digitalWrite (LED, HIGH) ; /*LED set HIGH if Gas detected */
@@ -146,7 +145,7 @@ void mq2(void *pvParameters)
       reading["mq2"] = "0";
     }
     str = "update-mq2";
-    sendPostRequest(str, reading["mq2"]);
+    sendPostRequest(str, reading);
     delay(2000);
     }
     vTaskDelete( NULL );
@@ -155,7 +154,7 @@ void mq2(void *pvParameters)
 void ultraSonic(void *pvParameters)
 {
     while(1){
-    //Serial.println("Inside Ultrasonic");
+    // Inside Ultrasonic Sensor
     // Clears the trigPin
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
@@ -182,7 +181,7 @@ void ultraSonic(void *pvParameters)
     Serial.println(distanceInch);
     reading["distance"] = String(distanceCm);
     str = "update-dist";
-    sendPostRequest(str, reading["distance"]);
+    sendPostRequest(str, reading);
     delay(2000);
     }
     vTaskDelete( NULL );
@@ -191,7 +190,7 @@ void ultraSonic(void *pvParameters)
 void temp(void *pvParameters)
 {
     while(1){
-    //Serial.println("Inside Temperature");
+    // Inside Temperature Sensor
     sensors.requestTemperatures(); 
     float temperatureC = sensors.getTempCByIndex(0);
     float temperatureF = sensors.getTempFByIndex(0);
@@ -202,7 +201,7 @@ void temp(void *pvParameters)
     Serial.println("ºF");
     reading["temp"] = String(temperatureC);
     str = "update-temp";
-    sendPostRequest(str, reading["temp"]);
+    sendPostRequest(str, reading);
     delay(2000);
     }
     vTaskDelete( NULL );
@@ -211,14 +210,14 @@ void temp(void *pvParameters)
 void vibration(void *pvParameters)
 {
     while(1){
-    //Serial.println("Inside Vibration");
+    // Inside Vibration Vibration Sensor
     bool value = digitalRead(vib);
     if (value == 1) {
       count = count + 1;
       delay(1000);
       reading["vibration"] = String(prev_count);
       str = "update-vib";
-      sendPostRequest(str, reading["vibration"]);
+      sendPostRequest(str, reading);
     }else if(value == 0){
       if(count != prev_count){
         prev_count = count;

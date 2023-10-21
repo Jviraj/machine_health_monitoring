@@ -4,7 +4,26 @@ import tkinter as tk
 from tkinter import font as tkFont
 import psycopg2
 from datetime import datetime
-# from sklearn.neighbors import KNeighborsClassifier
+import numpy as np
+import pandas as pd
+
+csv_file_path = "data.csv"
+dataset = pd.read_csv(csv_file_path)
+
+X = dataset.drop('Failure', axis = 1)
+y = dataset['Failure']
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.1, random_state = 42)
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+
+X_train = sc.fit_transform(X_train)
+
+from sklearn.neighbors import KNeighborsClassifier
+classifierKNN = KNeighborsClassifier(n_neighbors=2, metric='minkowski', p=1)
+classifierKNN.fit(X_train, y_train)
 
 # Initialize the PostgreSQL database connection
 def initialize_database_connection():
@@ -73,7 +92,7 @@ def mq2():
         updateLedMQ2(True)
     else:
         updateLedMQ2(False)
-    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature))
+    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature, vibration))
     predict.start()
     predict.join()
     print(f"Hello1: {mq2Gas}")
@@ -103,7 +122,7 @@ def dist():
         updateLedCoolantLevel(True)
     else:
         updateLedCoolantLevel(False)
-    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature))
+    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature, vibration))
     predict.start()
     predict.join()
     print(f"Hello2: {distance}")
@@ -134,7 +153,7 @@ def temp():
         updateLedTemperature(True)
     else:
         updateLedTemperature(False)
-    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature))
+    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature, vibration))
     predict.start()
     predict.join()
     print(f"Hello3: {temperature}")
@@ -151,6 +170,7 @@ def vib():
     # Get the current timestamp
     timestamp = datetime.now()
     timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    
     # Insert the sensor data into the database
     insert_query = "INSERT INTO sensor_data (timestamp, mq2Gas, distance, temperature, vibration) VALUES (%s, %s, %s, %s, %s)"
     data_to_insert = (timestamp_str, mq2Gas, distance, temperature, vibration)
@@ -164,6 +184,9 @@ def vib():
         updateLedVibration(True)
     else:
         updateLedVibration(False)
+    predict = threading.Thread(target=predictFailure, args=(mq2Gas, distance, temperature, vibration))
+    predict.start()
+    predict.join()
     print(f"Hello4: {vibration}")
     return jsonify("4"), 200
 
@@ -258,7 +281,7 @@ def win():
 
     root.mainloop()
 
-def predictFailure(m, d, t):
+def predictFailure(m, d, t, v):
     global fail_safe_led
     x = [[t, m, d]]
     y = classifierKNN.predict(x)

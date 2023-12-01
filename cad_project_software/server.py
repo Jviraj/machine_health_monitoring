@@ -4,6 +4,18 @@ import tkinter as tk
 from tkinter import font as tkFont
 import numpy as np
 import pandas as pd
+import psycopg2
+from datetime import datetime
+
+database_params = {
+    'dbname': 'postgres',
+    'user': 'postgres',
+    'password': 'qwerty0123',
+    'host': 'localhost',
+    'port': '5432'
+}
+
+insert_query = """INSERT INTO sensor_data (id, timestamp, mq2Gas, distance, temperature, vibration) VALUES (%s, %s, %s, %s, %s, %s);"""
 
 csv_file_path = "data.csv"
 dataset = pd.read_csv(csv_file_path)
@@ -31,7 +43,7 @@ temperature = "0"
 distance = "0"
 vibration = "0"
 
-global temperature_label, chatter_label, gas_leakage_label, coolant_level_label, temperature_led, chatter_led, gas_leakage_led, coolant_level_led, fail_safe_led
+global temperature_label, chatter_label, gas_leakage_label, coolant_level_label, temperature_led, chatter_led, gas_leakage_led, coolant_level_led, fail_safe_led, connection, cursor, Id
 
 
 @app.route("/greeting", methods=['POST'])
@@ -42,13 +54,14 @@ def greeting():
 
 @app.route("/update-mq2", methods=['POST'])
 def mq2():
-    global mq2Gas, distance, temperature
+    global mq2Gas, distance, temperature, vibration
     mq2Gas = request.json
     updateLabels()
     if mq2Gas == "1":
         updateLedMQ2(True)
     else:
         updateLedMQ2(False)
+        commitQuery(mq2Gas, distance, temperature, vibration)
     predict = threading.Thread(target=predictFailure, args = (mq2Gas, distance, temperature))
     predict.start()
     predict.join()
@@ -58,13 +71,14 @@ def mq2():
 
 @app.route("/update-dist", methods=['POST'])
 def dist():
-    global mq2Gas, distance, temperature
+    global mq2Gas, distance, temperature, vibration
     distance = request.json
     updateLabels()
     if float(distance) > 30.0:
         updateLedCoolantLevel(True)
     else:
         updateLedCoolantLevel(False)
+        commitQuery(mq2Gas, distance, temperature, vibration)
     predict = threading.Thread(target=predictFailure, args = (mq2Gas, distance, temperature))
     predict.start()
     predict.join()
@@ -74,13 +88,14 @@ def dist():
 
 @app.route("/update-temp", methods=['POST'])
 def temp():
-    global mq2Gas, distance, temperature
+    global mq2Gas, distance, temperature, vibration
     temperature = request.json
     updateLabels()
     if float(temperature) > 25:
         updateLedTemperature(True)
     else:
         updateLedTemperature(False)
+        commitQuery(mq2Gas, distance, temperature, vibration)
     predict = threading.Thread(target=predictFailure, args = (mq2Gas, distance, temperature))
     predict.start()
     predict.join()
@@ -90,13 +105,14 @@ def temp():
 
 @app.route("/update-vib", methods=['POST'])
 def vib():
-    global vibration
+    global vibration, distance, temperature, mq2Gas
     vibration = request.json
     updateLabels()
     if int(vibration) > 5:
         updateLedVibration(True)
     else:
         updateLedVibration(False)
+        commitQuery(mq2Gas, distance, temperature, vibration)
     # predict = threading.Thread(target=predictFailure())
     # predict.start()
     # predict.join()
@@ -153,7 +169,7 @@ def updateLabels():
 
 
 def win():
-    global temperature_label, chatter_label, gas_leakage_label, coolant_level_label, temperature_led, chatter_led, gas_leakage_led, coolant_level_led, fail_safe_led
+    global temperature_label, chatter_label, gas_leakage_label, coolant_level_label, temperature_led, chatter_led, gas_leakage_led, coolant_level_led, fail_safe_led, connection, cursor
 
     root = tk.Tk()
     root.title("Machine Health Monitoring")
@@ -195,6 +211,8 @@ def win():
 
     def exit():
         root.destroy()
+        cursor.close()
+        connection.close()
     update_button = tk.Button(
         frame2, text="Exit", fg="red", command=exit, font=custom_font)
     update_button.grid(row=3, column=3, padx=25, pady=10)
@@ -210,12 +228,34 @@ def predictFailure(m, d, t):
     else:
         fail_safe_led.config(bg="white")    
 
+def commitQuery(gas, dist, temp, vibration):
+    global connection, cursor, Id
+    Id = Id + 1
+    timestamp = datetime.now()
+    row = [Id, timestamp, gas, dist, temp, vibration]
+    cursor.execute(insert_query, row)
+    connection.commit()
+
+def backend():
+    global connection, cursor, Id
+    Id = 0
+    connection = psycopg2.connect(**database_params)
+    cursor = connection.cursor()
+    query = """SELECT Id FROM sensor_data ORDER BY Id DESC LIMIT 1;"""
+    cursor.execute(query)
+    i = cursor.fetchone()
+    Id = int(i[0])
+    print("Id:", Id, type(Id))
+
 if __name__ == '__main__':
     gui = threading.Thread(target=win)
     pythonServer = threading.Thread(target=server)
+    backendServer = threading.Thread(target=backend)
 
     gui.start()
     pythonServer.start()
+    backendServer.start()
 
     gui.join()
     pythonServer.join()
+    backendServer.join()
